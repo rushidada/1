@@ -1,0 +1,35 @@
+name: Daily Update Kannada & Hindi M3U
+
+on:
+  schedule:
+    # 6:00 AM IST = 00:30 AM UTC
+    - cron: "30 0 * * *"
+  workflow_dispatch: # Actions tab madhun manual run karnyasathi
+
+permissions:
+  contents: write
+
+jobs:
+  update-playlists:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download latest kan.m3u and hin.m3u
+        run: |
+          curl -fsSL "https://iptv-org.github.io/iptv/languages/kan.m3u" -o kan.m3u
+          curl -fsSL "https://iptv-org.github.io/iptv/languages/hin.m3u" -o hin.m3u
+
+      - name: Commit and push if updated
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add kan.m3u hin.m3u
+          if git diff --staged --quiet; then
+            echo "No changes in playlists."
+          else
+            git commit -m "chore: update kan.m3u and hin.m3u ($(date -u +'%Y-%m-%d %H:%M UTC'))"
+            git push
+          fi
+          
